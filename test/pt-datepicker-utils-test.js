@@ -23,8 +23,8 @@
         utils.setAttributes(node, undefined);
         utils.setAttributes(node, null);
         utils.setAttributes(node, 'any string');
-        utils.setAttributes(node, 'any number');
-        utils.setAttributes(node, 'any boolean');
+        utils.setAttributes(node, 2);
+        utils.setAttributes(node, false);
 
         node.outerHTML.should.to.equal('<a></a>');
       });
@@ -104,6 +104,33 @@
         utils.addClass(node, undefined);
 
         node.outerHTML.should.to.be.equal('<a class="test"></a>');
+      });
+    });
+
+    describe('#extend', function() {
+      it('should return object that has properties from object parent', function() {
+        var object1 = {a: 'a', b: [1, 2, 3]};
+        var object2 = {c: 'test'};
+
+        utils.extend(object1, object2);
+
+        object1.should.to.have.property('c');
+        object1.c.should.to.equal('test');
+      });
+
+      it('should return object that has properties from object parent' +
+          ' - deep extend', function() {
+
+        var object1 = {a: 'a'};
+        var object2 = {a: 'b', b: {d: 'test1', e: [1, 2]}, c: 'test'};
+
+        utils.extend(object1, object2);
+
+        object1.should.to.have.property('b');
+        object1.b.d.should.to.equal('test1');
+        object1.b.e.length.should.to.equal(2);
+        object1.a.should.to.equal('b');
+
       });
     });
   });
