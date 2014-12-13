@@ -7,17 +7,26 @@
     /////////////////////////////////////////////////////
     // Define some utilities function
 
-    // Set attributes for element
-    var setAttributes = function (el, attributes) {
+    /**
+     * Set attributes for element
+     * @param  {Element} el         - Element
+     * @param  {Object}  attributes - All attributes need to add to the element
+     */
+    var setAttributes = function(el, attributes) {
       if (typeof attributes === 'object') {
         for (var key in attributes) {
           el.setAttribute(key, attributes[key]);
         }
       }
-    }
+    };
 
-    // Create a new element
-    var createEl = function (tagName, attributes) {
+    /**
+     * Create a new element
+     * @param  {string} tagName    - The element tag name
+     * @param  {Object} attributes - The element attributes
+     * @return {Element | undefined}
+     */
+    var createEl = function(tagName, attributes) {
       if (!tagName) return;
 
       var node = document.createElement(tagName);
@@ -37,13 +46,53 @@
       }
 
       return node;
-    }
+    };
+
+    /**
+     * Check the element has class or not
+     * @param  {Element} el    - Element
+     * @param  {string}  klass - The class name need to be checked in the
+     *                           element
+     * @return {Boolean}
+     */
+    var hasClass = function(el, klass) {
+      if (!el || klass === '') return false;
+      return el.classList.contains(klass);
+    };
+
+    /**
+     * Add class to element
+     * @param {Element}        el    - Element
+     * @param {string | Array} klass - The class name need to be added to
+     *                                 element
+     */
+    var addClass = function(el, klass) {
+      if (!el || klass === '') return;
+
+      // Add a class name
+      if (typeof klass === 'string') {
+        el.classList.add(klass);
+      }
+
+      // Add a list of classes
+      if (Array.isArray(klass)) {
+        for (var key in klass) {
+          el.classList.add(klass[key]);
+        }
+      }
+    };
 
     /////////////////////////////////////////////////////
     // Define PTDatepicker constructor
     var PTDatepicker = (function() {
 
-      // PTDatepicker constructor
+      /**
+       * PTDatepicker constructor
+       * @constructor
+       * @param {Element} el      - Datepicker wil render before, after or inner
+       *                            this element
+       * @param {Object}  options - Datepicker config
+       */
       function PTDatepicker(el, options) {
         this.el = el;
         this.options = options;
@@ -63,7 +112,9 @@
     // For testing. It should be removed after testing
     window.utils = {
       setAttributes: setAttributes,
-      createEl: createEl
+      createEl: createEl,
+      hasClass: hasClass,
+      addClass: addClass
     };
   }
 
