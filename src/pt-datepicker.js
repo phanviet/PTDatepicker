@@ -145,9 +145,62 @@
 
     var PTDatepicker = (function() {
 
-      var WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      /**
+       * Return true if input is lead year, else false
+       * @param  {number}  year
+       * @return {Boolean}
+       */
+      var isLeadYear = function(year) {
+        if (typeof year === 'undefined' || year === null) {
+          return false;
+        }
 
-      var containerEl = createEl('div', {'class': 'pt-dp-container'},
+        if ((year%4 === 0 && year%100 !== 100) || year%400 === 0) {
+          return true;
+        }
+
+        return false;
+      };
+
+      /**
+       * Return number of dates in month
+       * @param  {number} month
+       * @param  {number} year
+       * @return {number}
+       */
+      var datesInMonth = function(month, year) {
+        var maxDate = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+        if(isLeadYear(year)) {
+          maxDate[1] = 29;
+        }
+
+        return maxDate[month];
+      };
+
+      /**
+       * Return today
+       * @return {Date}
+       */
+      var today = function() {
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        return today;
+      };
+
+      /**
+       * PTDatepicker constructor
+       * @constructor
+       * @param {Element} el      - Datepicker wil render before, after or inner
+       *                            this element
+       * @param {Object}  options - Datepicker options
+       */
+      function PTDatepicker(el, options) {
+
+        var WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        var containerEl = createEl('div', {'class': 'pt-dp-container'},
                           createEl('div', {'class': 'pt-dp-header'},
                             createEl('button', {'class': 'pt-dp-nav pre'}, '<'),
                             createEl('div', {'class': 'pt-dp-title'},
@@ -167,21 +220,89 @@
                           )
                         );
 
-      /**
-       * PTDatepicker constructor
-       * @constructor
-       * @param {Element} el      - Datepicker wil render before, after or inner
-       *                            this element
-       * @param {Object}  options - Datepicker options
-       */
-      function PTDatepicker(el, options) {
-
-        var now = new Date(),
-            month,
-            year;
 
         this.el = el;
         this.options = extend(config, options);
+
+        this.render = function(month, year) {
+          var monthTitleEl   = containerEl.querySelector('.pt-dp-title-month'),
+              yearTitleEl    = containerEl.querySelector('.pt-dp-title-year'),
+              weekdayRowEl   = containerEl.querySelector('.pt-dp-calendar thead tr'),
+              calendarEl     = containerEl.querySelector('.pt-dp-calendar tbody'),
+              dayRowEl,
+              dayEl,
+              labelBtnEl;
+
+          // Render header title
+          monthTitleEl.innerHTML = (month + 1) + ' ';
+          yearTitleEl.innerHTML  = year;
+
+          // Render week day
+          weekdayRowEl.innerHTML = '';
+          var i;
+          for (i = 0; i < 7; i++) {
+            weekdayRowEl.appendChild(
+              createEl('td', null, WEEKDAY[i])
+            );
+          }
+
+          var firstDay      = new Date(year, month, 1),
+              wkFirstDay    = firstDay.getDay();
+
+          // Render dates in month
+          calendarEl.innerHTML = '';
+          var nextDay = 1,
+              hasPutFirstDay = false,
+              day;
+
+          this.dates = [];
+          for (i = 0; i < 42; i++) {
+            if (i%7 === 0) {
+              dayRowEl = createEl('tr', null);
+            }
+
+            day = {
+              label: nextDay,
+              date: new Date(year, month, nextDay),
+              isDisabled: false
+            };
+
+            if (day.label > datesInMonth(month, year)) break;
+
+            dayEl = createEl('td', null);
+            labelBtnEl = createEl('button', null);
+
+            if (wkFirstDay === i%7) {
+              hasPutFirstDay = true;
+            }
+
+            if (hasPutFirstDay) {
+              if (today().getTime() === new Date(year, month, nextDay).getTime()) {
+                addClass(dayEl, 'today');
+              }
+
+              labelBtnEl.innerHTML = nextDay++;
+              dayEl.appendChild(labelBtnEl);
+              dayEl.setAttribute('date-pos', this.dates.length);
+
+              this.dates.push(day);
+            }
+
+            dayRowEl.appendChild(dayEl);
+
+            calendarEl.appendChild(dayRowEl);
+          }
+
+          if (this.options.position === POSITION.INNER) {
+
+            this.el.appendChild(containerEl);
+          }
+        };
+
+        // Init
+        var now = new Date(),
+            month,
+            year;
 
         if (this.activeDate) {
           month = this.activeDate.getMonth();
@@ -192,60 +313,8 @@
         }
 
         this.render(month, year);
+
       }
-
-      PTDatepicker.prototype.render = function(month, year) {
-        var monthTitleEl   = containerEl.querySelector('.pt-dp-title-month'),
-            yearTitleEl    = containerEl.querySelector('.pt-dp-title-year'),
-            weekdayRowEl   = containerEl.querySelector('.pt-dp-calendar thead tr'),
-            calendarEl     = containerEl.querySelector('.pt-dp-calendar tbody'),
-            day            = 1,
-            dayRowEl,
-            dayEl,
-            hasPutFirstDay = false;
-
-        monthTitleEl.innerHTML = (month + 1) + ' ';
-        yearTitleEl.innerHTML  = year;
-
-        weekdayRowEl.innerHTML = '';
-        for (var i = 0; i < 7; i++) {
-          weekdayRowEl.appendChild(
-            createEl('td', null, WEEKDAY[i])
-          );
-        }
-
-        var firstDay      = new Date(year, month, 1),
-            wkFirstDay    = firstDay.getDay();
-
-        calendarEl.innerHTML = '';
-        for (var i = 0; i < 6; i++) {
-          dayRowEl = createEl('tr', null);
-
-          for (var j = 0; j < 7; j++) {
-
-            if (day > 31) break;
-
-            dayEl = createEl('td', null);
-
-            if (wkFirstDay === j) {
-              hasPutFirstDay = true;
-            }
-
-            if (hasPutFirstDay) {
-              dayEl.innerHTML = day++;
-            }
-
-            dayRowEl.appendChild(dayEl);
-          }
-
-          calendarEl.appendChild(dayRowEl);
-        }
-
-        if (this.options.position === POSITION.INNER) {
-
-          this.el.appendChild(containerEl);
-        }
-      };
 
       return PTDatepicker;
 
