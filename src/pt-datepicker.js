@@ -85,6 +85,28 @@
     };
 
     /**
+     * Remove class from element
+     * @param  {Element} el           - Element
+     * @param  {string | Array} klass - The class name need to be removed from
+     *                                  element
+     */
+    var removeClass = function(el, klass) {
+      if (!el || klass === '') return;
+
+      // Remove a class
+      if (typeof klass === 'string') {
+        el.classList.remove(klass);
+      }
+
+      // Remove a list of classes
+      if (Array.isArray(klass)) {
+        for (var key in klass) {
+          el.classList.remove(klass[key]);
+        }
+      }
+    };
+
+    /**
      * Extend object
      * @param  {Object} dest - Destination object
      * @param  {Object} src  - Source object
@@ -238,6 +260,7 @@
       createEl: createEl,
       hasClass: hasClass,
       addClass: addClass,
+      removeClass:removeClass,
       extend: extend
     };
   }

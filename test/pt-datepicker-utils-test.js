@@ -133,6 +133,33 @@
 
       });
     });
+
+    describe('#removeClass', function() {
+
+      var el;
+
+      beforeEach(function() {
+        el = utils.createEl('div', {'class': 'test test1 test2'});
+      });
+
+      it('should return nothing', function() {
+        utils.removeClass(null);
+        utils.removeClass(el, '');
+        utils.removeClass(el);
+        el.classList.length.should.to.have.equal(3);
+
+      });
+
+      it('should return element has no classes after removing', function() {
+        utils.removeClass(el, 'test');
+
+        el.classList.length.should.to.have.equal(2);
+
+        utils.removeClass(el, ['test1', 'test2', 'test']);
+
+        el.classList.length.should.to.have.equal(0);
+      });
+    });
   });
 
 })(chai.should());
