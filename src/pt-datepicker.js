@@ -201,24 +201,24 @@
         var WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
         var containerEl = createEl('div', {'class': 'pt-dp-container'},
-                          createEl('div', {'class': 'pt-dp-header'},
-                            createEl('button', {'class': 'pt-dp-nav pre'}, '<'),
-                            createEl('div', {'class': 'pt-dp-title'},
-                              createEl('span', {'class': 'pt-dp-title-month'}),
-                              createEl('span', {'class': 'pt-dp-title-year'})
-                            ),
-                            createEl('button', {'class': 'pt-dp-nav next'}, '>')
-                          ),
-
-                          createEl('div', {'class': 'pt-dp-calendar'},
-                            createEl('table', null,
-                              createEl('thead', null,
-                                createEl('tr')
+                            createEl('div', {'class': 'pt-dp-header'},
+                              createEl('button', {'class': 'pt-dp-nav pre'}, '<'),
+                              createEl('div', {'class': 'pt-dp-title'},
+                                createEl('span', {'class': 'pt-dp-title-month'}),
+                                createEl('span', {'class': 'pt-dp-title-year'})
                               ),
-                              createEl('tbody')
+                              createEl('button', {'class': 'pt-dp-nav next'}, '>')
+                            ),
+
+                            createEl('div', {'class': 'pt-dp-calendar'},
+                              createEl('table', null,
+                                createEl('thead', null,
+                                  createEl('tr')
+                                ),
+                                createEl('tbody')
+                              )
                             )
-                          )
-                        );
+                          );
 
 
         this.el = el;
@@ -229,6 +229,7 @@
               yearTitleEl    = containerEl.querySelector('.pt-dp-title-year'),
               weekdayRowEl   = containerEl.querySelector('.pt-dp-calendar thead tr'),
               calendarEl     = containerEl.querySelector('.pt-dp-calendar tbody'),
+              self           = this,
               dayRowEl,
               dayEl,
               labelBtnEl;
@@ -287,6 +288,17 @@
 
               this.dates.push(day);
             }
+
+            // Add event handler when choosing date
+            dayEl.addEventListener('click', function(event) {
+              var target = event.currentTarget;
+              var prevActiveDateEl = containerEl.querySelector('.pt-dp-calendar td.active');
+              removeClass(prevActiveDateEl, 'active');
+              addClass(target, 'active');
+
+              self.activeDate = self.dates[target.getAttribute('date-pos')].date;
+
+            });
 
             dayRowEl.appendChild(dayEl);
 
