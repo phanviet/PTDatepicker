@@ -133,6 +133,31 @@
 
       });
     });
+
+    describe('#removeClass', function() {
+      it('should do nothing', function() {
+        var el = utils.createEl('div', {'class': 'test'});
+
+        utils.removeClass(null);
+        utils.removeClass(el, '');
+        utils.removeClass(el, 'test1');
+
+        el.getAttribute('class').should.to.have.equal('test');
+      });
+
+      it('should remove class', function() {
+        var el = utils.createEl('div', {'class': 'test test1'});
+
+        utils.removeClass(el, 'test');
+
+        el.getAttribute('class').should.to.have.equal('test1');
+
+        utils.removeClass(el, ['test', 'test1']);
+
+        el.getAttribute('class').should.to.have.equal('');
+        el.classList.length.should.to.have.equal(0);
+      });
+    });
   });
 
 })(chai.should());
