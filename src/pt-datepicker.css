@@ -112,10 +112,12 @@ table {
 .pt-dp-container .pt-dp-calendar tbody td.today > button {
   color: blue;
 }
+
 .pt-dp-container .pt-dp-calendar tbody td.isDisable > button {
 	background: gray;
 	color: yeallow;
 }
+
 .pt-dp-container .pt-dp-calendar tbody td.active > button {
   background: lightgreen;
   color: white;

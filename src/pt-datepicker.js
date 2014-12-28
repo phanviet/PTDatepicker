@@ -242,10 +242,8 @@
           )
         );
 
-
         this.el = el;
         this.options = extend(config, options);
-
         handleYearChange = function() {
           if (curMonth < 0) {
             curYear--;

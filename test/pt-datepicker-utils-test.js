@@ -135,26 +135,27 @@
     });
 
     describe('#removeClass', function() {
-      it('should do nothing', function() {
-        var el = utils.createEl('div', {'class': 'test'});
 
-        utils.removeClass(null);
-        utils.removeClass(el, '');
-        utils.removeClass(el, 'test1');
+      var el;
 
-        el.getAttribute('class').should.to.have.equal('test');
+      beforeEach(function() {
+        el = utils.createEl('div', {'class': 'test test1 test2'});
       });
 
-      it('should remove class', function() {
-        var el = utils.createEl('div', {'class': 'test test1'});
+      it('should return nothing', function() {
+        utils.removeClass(null);
+        utils.removeClass(el, '');
+        utils.removeClass(el);
+        el.classList.length.should.to.have.equal(3);
 
+      });
+
+      it('should return element has no classes after removing', function() {
         utils.removeClass(el, 'test');
 
-        el.getAttribute('class').should.to.have.equal('test1');
+        el.classList.length.should.to.have.equal(2);
 
-        utils.removeClass(el, ['test', 'test1']);
-
-        el.getAttribute('class').should.to.have.equal('');
+        utils.removeClass(el, ['test1', 'test2', 'test']);
         el.classList.length.should.to.have.equal(0);
       });
     });
