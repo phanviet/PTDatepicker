@@ -40,7 +40,7 @@
       for (var i = 2, len = arguments.length; i < len; i++) {
         child = arguments[i];
         if (typeof child === 'string' || typeof child === 'number' ||
-            typeof child === 'boolean') {
+          typeof child === 'boolean') {
           child = document.createTextNode(child);
         }
 
@@ -85,6 +85,28 @@
     };
 
     /**
+     * Remove class from element
+     * @param  {Element} el           - Element
+     * @param  {string | Array} klass - The class name need to be removed from
+     *                                  element
+     */
+    var removeClass = function(el, klass) {
+      if (!el || klass === '') return;
+
+      // Remove a class
+      if (typeof klass === 'string') {
+        el.classList.remove(klass);
+      }
+
+      // Remove a list of classes
+      if (Array.isArray(klass)) {
+        for (var key in klass) {
+          el.classList.remove(klass[key]);
+        }
+      }
+    };
+
+    /**
      * Extend object
      * @param  {Object} dest - Destination object
      * @param  {Object} src  - Source object
@@ -97,7 +119,7 @@
         srcValue = src[key];
 
         if (srcValue && srcValue.constructor &&
-         srcValue.constructor === Object) {
+          srcValue.constructor === Object) {
           dest[key] = dest[key] || {};
           extend(dest[key], srcValue);
         } else {
@@ -112,9 +134,9 @@
 
     // Default PTDatepicker config
     var POSITION = {
-      INNER : 1,
+      INNER: 1,
       BEFORE: 2,
-      AFTER : 3
+      AFTER: 3
     };
 
     var config = {
@@ -122,28 +144,49 @@
     };
 
     var PTDatepicker = (function() {
+      /**
+       * Return true if input is lead year, else false
+       * @param  {number}  year
+       * @return {Boolean}
+       */
+      var isLeadYear = function(year) {
+        if (typeof year === 'undefined' || year === null) {
+          return false;
+        }
 
-      var WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        if ((year % 4 === 0 && year % 100 !== 100) || year % 400 === 0) {
+          return true;
+        }
 
-      var containerEl = createEl('div', {'class': 'pt-dp-container'},
-                          createEl('div', {'class': 'pt-dp-header'},
-                            createEl('button', {'class': 'pt-dp-nav pre'}, '<'),
-                            createEl('div', {'class': 'pt-dp-title'},
-                              createEl('span', {'class': 'pt-dp-title-month'}),
-                              createEl('span', {'class': 'pt-dp-title-year'})
-                            ),
-                            createEl('button', {'class': 'pt-dp-nav next'}, '>')
-                          ),
+        return false;
+      };
 
-                          createEl('div', {'class': 'pt-dp-calendar'},
-                            createEl('table', null,
-                              createEl('thead', null,
-                                createEl('tr')
-                              ),
-                              createEl('tbody')
-                            )
-                          )
-                        );
+      /**
+       * Return number of dates in month
+       * @param  {number} month
+       * @param  {number} year
+       * @return {number}
+       */
+      var datesInMonth = function(month, year) {
+        var maxDate = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+        if (isLeadYear(year)) {
+          maxDate[1] = 29;
+        }
+
+        return maxDate[month];
+      };
+
+      /**
+       * Return today
+       * @return {Date}
+       */
+      var today = function() {
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        return today;
+      };
 
       /**
        * PTDatepicker constructor
@@ -154,76 +197,202 @@
        */
       function PTDatepicker(el, options) {
 
-        var now = new Date(),
-            month,
-            year;
+        var WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+          preOrNextClick,
+          clickElDate,
+          handleYearChange,
+          dates,
+          curMonth,
+          curYear,
+          render;
+        var self = this;
+        var containerEl = createEl('div', {
+            'class': 'pt-dp-container'
+          },
+          createEl('div', {
+              'class': 'pt-dp-header'
+            },
+            createEl('button', {
+              'class': 'pt-dp-nav pre'
+            }, '<'),
+            createEl('div', {
+                'class': 'pt-dp-title'
+              },
+              createEl('span', {
+                'class': 'pt-dp-title-month'
+              }),
+              createEl('span', {
+                'class': 'pt-dp-title-year'
+              })
+            ),
+            createEl('button', {
+              'class': 'pt-dp-nav next'
+            }, '>')
+          ),
+
+          createEl('div', {
+              'class': 'pt-dp-calendar'
+            },
+            createEl('table', null,
+              createEl('thead', null,
+                createEl('tr')
+              ),
+              createEl('tbody')
+            )
+          )
+        );
+
 
         this.el = el;
         this.options = extend(config, options);
 
-        if (this.activeDate) {
-          month = this.activeDate.getMonth();
-          year = this.activeDate.getYear();
-        } else {
-          month = now.getMonth();
-          year = now.getFullYear();
+        handleYearChange = function() {
+          if (curMonth < 0) {
+            curYear--;
+            curMonth = 11;
+          }
+
+          if (curMonth > 11) {
+            curYear++;
+            curMonth = 0;
+          }
+        };
+        clickElDate = function(event) {
+          var target = event.currentTarget;
+          var prevActiveDateEl = containerEl.querySelector('.pt-dp-calendar td.active');
+          removeClass(prevActiveDateEl, 'active');
+          addClass(target, 'active');
+
+          this.activeDate = dates[target.getAttribute('date-pos')].date;
         }
+        preOrNextClick = function(event) {
 
-        this.render(month, year);
-      }
+          var target = event.target,
+            targetClass = target.className;
+          if (targetClass) {
+            console.log(targetClass);
+            if (targetClass === 'pt-dp-nav next' || targetClass === 'pt-dp-nav pre') {
 
-      PTDatepicker.prototype.render = function(month, year) {
-        var monthTitleEl   = containerEl.querySelector('.pt-dp-title-month'),
-            yearTitleEl    = containerEl.querySelector('.pt-dp-title-year'),
-            weekdayRowEl   = containerEl.querySelector('.pt-dp-calendar thead tr'),
-            calendarEl     = containerEl.querySelector('.pt-dp-calendar tbody'),
-            day            = 1,
+              if (targetClass === 'pt-dp-nav next') {
+                console.log("quang.........");
+                curMonth = curMonth + 1;
+              } else {
+                curMonth = curMonth - 1;
+              }
+              handleYearChange();
+              render(curMonth, curYear);
+            }
+          }
+        }
+        render = function(month, year) {
+          var monthTitleEl = containerEl.querySelector('.pt-dp-title-month'),
+            yearTitleEl = containerEl.querySelector('.pt-dp-title-year'),
+            weekdayRowEl = containerEl.querySelector('.pt-dp-calendar thead tr'),
+            calendarEl = containerEl.querySelector('.pt-dp-calendar tbody'),
+            nextMonth = containerEl.querySelector('.pt-dp-nav.next'),
+            preMonth = containerEl.querySelector('.pt-dp-nav.pre'),
             dayRowEl,
             dayEl,
-            hasPutFirstDay = false;
+            labelBtnEl;
+          // Render header title
+          monthTitleEl.innerHTML = (month + 1) + ' ';
+          yearTitleEl.innerHTML = year;
+          nextMonth.addEventListener('click', preOrNextClick);
+          preMonth.addEventListener('click', preOrNextClick);
+          // Render week day
+          weekdayRowEl.innerHTML = '';
+          var i;
+          for (i = 0; i < 7; i++) {
+            weekdayRowEl.appendChild(
+              createEl('td', null, WEEKDAY[i])
+            );
+          }
 
-        monthTitleEl.innerHTML = (month + 1) + ' ';
-        yearTitleEl.innerHTML  = year;
+          var firstDay = new Date(year, month, 1),
+            wkFirstDay = firstDay.getDay();
 
-        weekdayRowEl.innerHTML = '';
-        for (var i = 0; i < 7; i++) {
-          weekdayRowEl.appendChild(
-            createEl('td', null, WEEKDAY[i])
-          );
-        }
+          // Render dates in month
+          calendarEl.innerHTML = '';
+          var nextDay = 1,
+            hasPutFirstDay = false,
+            day;
 
-        var firstDay      = new Date(year, month, 1),
-            wkFirstDay    = firstDay.getDay();
+          dates = [];
+          for (i = 0; i < 42; i++) {
+            if (i % 7 === 0) {
+              dayRowEl = createEl('tr', null);
+            }
 
-        calendarEl.innerHTML = '';
-        for (var i = 0; i < 6; i++) {
-          dayRowEl = createEl('tr', null);
+            day = {
+              label: nextDay,
+              date: new Date(year, month, nextDay),
+              isDisabled: false
+            };
 
-          for (var j = 0; j < 7; j++) {
-
-            if (day > 31) break;
+            if (day.label > datesInMonth(month, year)) break;
 
             dayEl = createEl('td', null);
+            labelBtnEl = createEl('button', null);
 
-            if (wkFirstDay === j) {
+            if (wkFirstDay === i % 7) {
               hasPutFirstDay = true;
             }
 
             if (hasPutFirstDay) {
-              dayEl.innerHTML = day++;
+              if (today().getTime() === new Date(year, month, nextDay).getTime()) {
+                addClass(dayEl, 'today');
+              }
+              if (today().getTime() > new Date(year, month, nextDay).getTime()) {
+                addClass(dayEl, 'isDisable');
+              }
+              labelBtnEl.innerHTML = nextDay++;
+              dayEl.appendChild(labelBtnEl);
+              dayEl.setAttribute('date-pos', dates.length);
+
+              dates.push(day);
             }
 
+            // Add event handler when choosing date
+            // dayEl.addEventListener('click', function(event) {
+            // var target = event.currentTarget;
+            // var prevActiveDateEl = containerEl.querySelector('.pt-dp-calendar td.active');
+            // removeClass(prevActiveDateEl, 'active');
+            // addClass(target, 'active');
+
+            // self.activeDate = self.dates[target.getAttribute('date-pos')].date;
+
+            // });
+            if (today().getTime() < new Date(year, month, nextDay).getTime())
+              dayEl.addEventListener('click', clickElDate);
             dayRowEl.appendChild(dayEl);
+
+            calendarEl.appendChild(dayRowEl);
           }
 
-          calendarEl.appendChild(dayRowEl);
+          if (self.options.position === POSITION.INNER) {
+
+            self.el.appendChild(containerEl);
+          }
+        };
+
+        // Init
+        var now = new Date(),
+          month,
+          year;
+
+        if (self.activeDate) {
+          month = self.activeDate.getMonth();
+          year = self.activeDate.getYear();
+        } else {
+          if (curMonth == null) {
+            curMonth = now.getMonth();
+            curYear = now.getFullYear();
+          }
         }
 
-        if (this.options.position === POSITION.INNER) {
+        render(curMonth, curYear);
 
-          this.el.appendChild(containerEl);
-        }
-      };
+      }
 
       return PTDatepicker;
 
@@ -238,6 +407,7 @@
       createEl: createEl,
       hasClass: hasClass,
       addClass: addClass,
+      removeClass: removeClass,
       extend: extend
     };
   }
