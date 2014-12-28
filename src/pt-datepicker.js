@@ -264,7 +264,7 @@
           this.activeDate = dates[target.getAttribute('date-pos')].date;
         }
         preOrNextClick = function(event) {
-
+          console.log('@ handle');
           var target = event.target,
             targetClass = target.className;
           if (targetClass) {
